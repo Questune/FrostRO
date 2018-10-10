@@ -1,2 +1,0 @@
-# FrostRO
-Server Development Discussion
