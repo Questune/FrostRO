@@ -1,0 +1,222 @@
+prontera,149,194,4	script	Devil Square Guardian	10191,{
+	set .@gm_level, 99; // GM level required to start/stop the event
+
+	mes "[Devil Square Guardian]";
+	mes "This is the entrance to ^FF0000Devil Square^000000.";
+	mes "If you fail or die, the door will close and you must wait until the event starts again to re-enter.";
+	next;
+	switch(select("Enter.:Information.:" + ((getgmlevel() >= .@gm_level) ? "GM Menu." : "") + ":Cancel.")) {
+	case 1:
+		if (.start != 1) { // registration period
+			mes "[Devil Square Guardian]";
+			mes "Devil Square is now closed.";
+			mes "It will open at these times:";
+			mes "00:00 , 08:00 , 16:00 , 24:00"; // display your times here
+			close;
+		}
+		if (BaseLevel < 70 || Zeny < 20000) { // requirements
+			mes "[Devil Square Guardian]";
+			mes "You do not meet the requirements to enter Devil Square.";
+			mes " ";
+			mes "Requirements:";
+			mes " - Base Level 70";
+			mes " - Registration fee 20,000z";
+			close;
+		}
+		Zeny -= 20000;
+		announce strcharinfo(0)+" has entered Devil Square.", bc_npc;
+		percentheal 100,100;
+		warp "ordeal_1-1",150,149;
+		close;
+	case 2:
+		mes "[Devil Square Guardian]";
+		mes "Inside, you will encounter 3 waves of monsters. The monsters will grow stronger with each wave.";
+		mes "Remember All monsters located in different portals you must find them and kill them all to proceed to next wave.";
+		next;
+		mes "[Devil Square Guardian]";
+		mes "If you defeat all the enemies, you will be given the opportunity to open 5 Crystals with items, equipment, and rare cards inside!";
+		close;
+	case 3:
+		mes "[Devil Square Guardian]";
+		switch (.start) { // event states
+			case 0: mes "Devil Square has not yet started."; break;
+			case 1: mes "Devil Square is currently accepting participants."; break;
+			case 2: mes "Devil Square Event is currently running on Round "+ .round +" with "+ .mob +" monsters remaining."; break;
+		}
+		next;
+		switch(select("Start event.:Stop event.:Cancel.")) {
+		case 1:
+			mes "[Devil Square Guardian]";
+			if (.start)
+				mes "Devil Square has already started.";
+			else {
+				mes "Starting Devil Square...";
+				donpcevent strnpcinfo(0)+"::OnStartEvent";
+			}
+			close;
+		case 2:
+			mes "[Devil Square Guardian]";
+			if (!.start)
+				mes "Devil Square has not yet started.";
+			else {
+				mes "Stopping Devil Square...";
+				donpcevent strnpcinfo(0)+"::OnStopEvent";
+			}
+			close;
+		case 3:
+			break;
+		}
+		break;
+	case 4:
+		break;
+	}
+	mes "[Devil Square Guardian]";
+	mes "Farewell.";
+	close;
+
+OnStartEvent:
+OnClock0200:
+OnClock2200:
+	.start = 1;
+	enablenpc "ord11-12"; //from npc/warps/pvp.txt
+	disablenpc "Devil Square Guardian#2";
+	mapannounce "ordeal_1-1","Devil Square is now closed.", bc_map;
+	getmapxy .@map$, .@x, .@y, UNITTYPE_NPC;
+	mapwarp "ordeal_1-1", .@map$, .@x, .@y;
+	killmonsterall "ordeal_1-1";
+	announce "Devil Square is OPEN. The event will begin in 5 minutes.", bc_all;
+	sleep 60000;
+	announce "Devil Square will begin in 4 minutes.", bc_all;
+	sleep 60000;
+	announce "Devil Square will begin in 3 minutes.", bc_all;
+	sleep 60000;
+	announce "Devil Square will begin in 2 minutes.", bc_all;
+	sleep 60000;
+	announce "Devil Square will begin in 1 minute.", bc_all;
+	sleep 60000;
+	announce "Devil Square has STARTED!", bc_all;
+	if ( !getmapusers("ordeal_1-1") )
+		goto OnStopEvent;
+	.start = 2;
+	.round = 1;
+	.mob = 127;
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] SOLDIER SKELETON",1028,10,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] ORC ARCHER",1189,15,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] SANDMAN",1165,10,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] ARCHER SKELETON",1016,15,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] MINOROUS",1149,15,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] REQUIEM",1164,10,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",103,104,64,66,"[DS] SOLDIER SKELETON",1028,10,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",51,69,70,52,"[DS] Biotata",2068,1,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",74,72,87,88,"[DS] SANDMAN",1165,10,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",104,103,70,60,"[DS] ARCHER SKELETON",1016,15,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",62,67,54,54,"[DS] MINOROUS",1149,15,strnpcinfo(0)+"::OnDevilDead";
+	areamonster "ordeal_1-1",96,99,111,106,"[DS] Amdarias",2476,1,strnpcinfo(0)+"::OnDevilDead";
+	end;
+
+OnDevilDead:
+	.mob--;
+	if ( .mob == 25 || .mob == 5 )
+		announce "Devil Square : "+ .mob +" monsters remaining in round 1.", bc_map;
+	else if ( .mob <= 0 ) {
+		announce "Devil Square is entering round 2...", bc_map;
+		goto OnDevil2;
+	}
+	end;
+
+OnDevil2:
+	.round = 2;
+	.mob = 117;
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] GARGOYLE",1253,15,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] ALARM",1193,10,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] HIGH ORC",1213,10,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] INJUSTICE",1257,10,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] Assassin Cross Eremes",1647,1,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] WRAITH",1192,10,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",107,191,95,203,"[DS] GARGOYLE",1253,15,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",81,220,69,232,"[DS] ALARM",1193,10,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",62,246,54,236,"[DS] HIGH ORC",1213,10,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",67,244,71,230,"[DS] Daehyon",2253,1,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",83,217,97,203,"[DS] MIMIC",1191,15,strnpcinfo(0)+"::OnDevilDead2";
+	areamonster "ordeal_1-1",107,186,52,238,"[DS] WRAITH",1192,10,strnpcinfo(0)+"::OnDevilDead2";
+	end;
+
+OnDevilDead2:
+	.mob--;
+	if ( .mob == 25 || .mob == 5 )
+		announce "Devil Square : "+ .mob +" monsters remaining in round 2.", bc_map;
+	else if ( .mob <= 0 ) {
+		announce "Devil Square is entering round 3...", bc_map;
+		goto OnDevil3;
+	}
+	end;
+
+OnDevil3:
+	.round = 3;
+	.mob = 98;
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] ANOLIAN",1206,15,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] WANDERER",1208,15,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] Fallen Bishop",1871,1,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] JOKER",1131,15,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] MOONLIGHT",1150,2,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",183,182,246,244,"[DS] DARK ILLUSION",1302,1,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",91,149,78,150,"[DS] ANOLIAN",1206,15,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",52,150,37,153,"[DS] WANDERER",1208,15,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",27,142,35,156,"[DS] High Wizard Katrinn",1651,1,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",39,142,49,150,"[DS] JOKER",1131,15,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",63,150,79,146,"[DS] MOONLIGHT",1150,2,strnpcinfo(0)+"::OnDevilDead3";
+	areamonster "ordeal_1-1",92,151,37,159,"[DS] DARK ILLUSION",1302,1,strnpcinfo(0)+"::OnDevilDead3";
+	end;
+
+OnDevilDead3:
+	.mob--;
+	if ( .mob == 25 || .mob == 5 )
+		announce "Devil Square : "+ .mob +" monsters remaining in the final round.", bc_map;
+	else if ( .mob <= 0 ) {
+		announce "Devil Square : CONGRATULATIONS. 5 Crystals has been summon on the middle kill them all to get your prize.", bc_map;
+		goto OnDevil4;
+	}
+	end;
+
+OnDevil4:
+	.round = 4;
+	.mob = 5;
+	monster "ordeal_1-1",162,151,"[DS] Crystal",2035,1,strnpcinfo(0)+"::OnCrystalDead";
+	monster "ordeal_1-1",149,162,"[DS] Crystal",2035,1,strnpcinfo(0)+"::OnCrystalDead";
+	monster "ordeal_1-1",135,154,"[DS] Crystal",2035,1,strnpcinfo(0)+"::OnCrystalDead";
+	monster "ordeal_1-1",135,140,"[DS] Crystal",2035,1,strnpcinfo(0)+"::OnCrystalDead";
+	monster "ordeal_1-1",149,135,"[DS] Crystal",2035,1,strnpcinfo(0)+"::OnCrystalDead";
+	end;
+
+OnCrystalDead:
+	.mob--;
+	announce "Devil Square : "+ strcharinfo(0) +" open [DS] Crystal at Devil Square.", bc_all;
+	if ( .mob <= 0 )
+		goto OnStopEvent;
+	end;
+
+OnStopEvent:
+	killmonsterall "ordeal_1-1";
+	enablenpc "ord11-12"; //from npc/warps/pvp.txt
+	enablenpc "Devil Square Guardian#2";
+	.start = .round = .mob = 0;
+	end;
+}
+
+ordeal_1-1,150,149,4	script	Devil Square Guardian#2	406,{
+	mes "[Exit]";
+	mes "Farewell.";
+	close2;
+	warp "SavePoint",0,0;
+	end;
+}
+
+ordeal_1-1	mapflag	nowarp
+ordeal_1-1	mapflag	nowarpto
+ordeal_1-1	mapflag	noteleport
+ordeal_1-1	mapflag	monster_noteleport
+ordeal_1-1	mapflag	nosave	SavePoint
+ordeal_1-1	mapflag	nomemo
+ordeal_1-1	mapflag	nobranch
+ordeal_1-1	mapflag	nopenalty
+ordeal_1-1	mapflag	noicewall
