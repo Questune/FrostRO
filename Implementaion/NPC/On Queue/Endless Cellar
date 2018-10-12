@@ -8,9 +8,6 @@
 //= 1.0  First Release
 //=====================================================================================================
 
-// = Settings
-// ====================================================================================================
-
 e_tower,76,79,0	script	Cellar Protection Stone	2_MONEMUS,{
 	set .@party_id, getcharid(1);
 	set .@is_leader, ( getcharid(0) == getpartyleader(.@party_id,2) );
